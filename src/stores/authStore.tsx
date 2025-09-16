@@ -24,20 +24,21 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     try {
       set({ loading: true });
 
-      // 사용자 정보 가져오기
-      const { data, error } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
 
       if (error) {
         console.error("Auth initialization error:", error);
-        set({ user: null, loading: false });
+        set({ user: null });
         return;
       }
 
-      const user = data?.user ?? null;
       set({ user });
     } catch (error) {
       console.error("Auth initialization error:", error);
-      set({ user: null, loading: false });
+      set({ user: null });
     } finally {
       set({ loading: false });
     }

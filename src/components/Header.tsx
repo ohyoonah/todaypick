@@ -33,7 +33,7 @@ export default function Header() {
     }
   }, [isPending, state, setUser]);
 
-  const handleSignOut = useCallback(() => {
+  const handleLogOut = useCallback(() => {
     startTransition(() => {
       formAction();
     });
@@ -98,7 +98,7 @@ export default function Header() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={handleSignOut}
+                  onClick={handleLogOut}
                   className="text-red-600 cursor-pointer"
                   disabled={isPending}
                 >

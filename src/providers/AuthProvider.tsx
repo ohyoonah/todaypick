@@ -8,8 +8,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { initialize, setUser, setLoading, clearAuth } = useAuthStore();
 
   useEffect(() => {
-    // 초기화
-    initialize();
+    const initializeAuth = async () => {
+      try {
+        setLoading(true);
+        await initialize();
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+        clearAuth();
+      }
+    };
+
+    initializeAuth();
 
     const supabase = createClient();
     const {
@@ -18,26 +27,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Auth state change:", event, session?.user?.email);
 
       switch (event) {
+        case "INITIAL_SESSION":
+          break;
+
         case "SIGNED_OUT":
           clearAuth();
           break;
 
         case "SIGNED_IN":
           if (!session?.user) return clearAuth();
-
-          setUser(session?.user);
+          setUser(session.user);
           setLoading(false);
           break;
 
         case "TOKEN_REFRESHED":
           if (!session?.user) return clearAuth();
-
-          setUser(session?.user);
+          setUser(session.user);
           setLoading(false);
           break;
 
         default:
-          clearAuth();
           break;
       }
     });
