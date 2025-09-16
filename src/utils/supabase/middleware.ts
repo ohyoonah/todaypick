@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { ROUTE_PATH } from "@/config/constants";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -29,40 +30,30 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getClaims(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
+  try {
+    // IMPORTANT: Don't remove getClaims()
+    const { data } = await supabase.auth.getClaims();
+    const user = data?.claims;
 
-  // IMPORTANT: Don't remove getClaims()
-  const { data } = await supabase.auth.getClaims();
+    // 공개 경로들 (인증 불필요)
+    const publicPaths = [ROUTE_PATH.HOME, ROUTE_PATH.LOGIN, ROUTE_PATH.SIGNUP];
+    const isPublicPath = publicPaths.some((path) =>
+      request.nextUrl.pathname.startsWith(path)
+    );
 
-  const user = data?.claims;
-
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith("/") &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/signup") &&
-    !request.nextUrl.pathname.startsWith("/auth")
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+    // 인증이 필요한 경로에서 사용자가 없는 경우
+    if (!user && !isPublicPath) {
+      const url = request.nextUrl.clone();
+      url.pathname = ROUTE_PATH.LOGIN;
+      return NextResponse.redirect(url);
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message === "Auth session missing!") {
+      console.log("No active session in middleware - continuing");
+    } else {
+      console.error("Middleware auth error:", error);
+    }
   }
-
-  // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
-  // creating a new response object with NextResponse.next() make sure to:
-  // 1. Pass the request in it, like so:
-  //    const myNewResponse = NextResponse.next({ request })
-  // 2. Copy over the cookies, like so:
-  //    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
-  // 3. Change the myNewResponse object to fit your needs, but avoid changing
-  //    the cookies!
-  // 4. Finally:
-  //    return myNewResponse
-  // If this is not done, you may be causing the browser and server to go out
-  // of sync and terminate the user's session prematurely!
 
   return supabaseResponse;
 }

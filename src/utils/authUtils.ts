@@ -49,6 +49,7 @@ export const formatAuthError = (errorMessage: string): string => {
     "Password mismatch": "비밀번호가 일치하지 않습니다",
     "Invalid nickname": "닉네임은 2-20자 사이여야 합니다",
     "Failed to logout": "로그아웃 실패",
+    "Auth session missing!": "인증 세션이 없습니다", // 추가
   };
 
   return (

@@ -110,10 +110,12 @@ export default function Header() {
           ) : (
             <div className="flex gap-2">
               <Link href={ROUTE_PATH.LOGIN}>
-                <Button variant="outline">로그인</Button>
+                <Button variant="outline" className="cursor-pointer">
+                  로그인
+                </Button>
               </Link>
               <Link href={ROUTE_PATH.SIGNUP}>
-                <Button>회원가입</Button>
+                <Button className="cursor-pointer">회원가입</Button>
               </Link>
             </div>
           )}
