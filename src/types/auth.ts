@@ -13,7 +13,4 @@ export interface SignUpData extends LoginData {
 export interface AuthState {
   user: User | null;
   loading: boolean;
-  signIn: (data: LoginData) => Promise<void>;
-  signUp: (data: SignUpData) => Promise<void>;
-  signOut: () => Promise<void>;
 }

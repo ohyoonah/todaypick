@@ -1,17 +1,31 @@
 "use client";
 
-import { useState, useCallback, useActionState } from "react";
+import { useState, useCallback, useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { login } from "@/app/login/action";
-import { FORM_DATA } from "@/config/constants";
+import { FORM_DATA, ROUTE_PATH } from "@/config/constants";
+import { useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function LoginForm() {
+  const router = useRouter();
+  const { setUser } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
-  const [state, formAction, isPending] = useActionState(login, { error: "" });
+  const [state, formAction, isPending] = useActionState(login, {
+    user: null,
+    error: "",
+  });
+
+  useEffect(() => {
+    if (!state.user) return;
+
+    setUser(state.user);
+    router.push(ROUTE_PATH.HOME);
+  }, [state.user, setUser, router]);
 
   const handleTogglePasswordVisibility = useCallback(() => {
     setShowPassword((prev) => !prev);

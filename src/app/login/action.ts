@@ -2,11 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { User } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/server";
 import { validateEmail, formatAuthError } from "@/utils/authUtils";
 import { FORM_DATA, ROUTE_PATH } from "@/config/constants";
 
-export async function login(prevState: { error: string }, formData: FormData) {
+export async function login(
+  prevState: { user: User | null; error: string },
+  formData: FormData
+) {
   const supabase = await createClient();
 
   const data = {
@@ -15,15 +19,29 @@ export async function login(prevState: { error: string }, formData: FormData) {
   };
 
   if (!validateEmail(data.email)) {
-    return { error: formatAuthError("Invalid email") };
+    return { user: null, error: formatAuthError("Invalid email") };
   }
 
-  const { error } = await supabase.auth.signInWithPassword(data);
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.signInWithPassword(data);
+
+  if (error) {
+    return { user: null, error: formatAuthError(error.message) };
+  }
+
+  revalidatePath(ROUTE_PATH.HOME, "layout");
+  return { user, error: "" };
+}
+
+export async function logout() {
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signOut();
 
   if (error) {
     return { error: formatAuthError(error.message) };
   }
-
   revalidatePath(ROUTE_PATH.HOME, "layout");
   redirect(ROUTE_PATH.HOME);
 }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { signup } from "@/app/signup/action";
 import { FORM_DATA, ROUTE_PATH } from "@/config/constants";
+import { useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,18 +13,20 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function SignUpForm() {
   const router = useRouter();
+  const { setUser } = useAuthStore();
   const [state, formAction, isPending] = useActionState(signup, {
+    user: null,
     error: "",
-    success: false,
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
-    if (state.success && !isPending) {
-      router.push(ROUTE_PATH.HOME);
-    }
-  }, [state.success, isPending, router]);
+    if (!state.user) return;
+
+    setUser(state.user);
+    router.push(ROUTE_PATH.HOME);
+  }, [state.user, setUser, router]);
 
   const handleTogglePasswordVisibility = useCallback(() => {
     setShowPassword((prev) => !prev);
@@ -120,7 +123,7 @@ export function SignUpForm() {
         </Alert>
       )}
 
-      {state.success && (
+      {!!state.user && !isPending && (
         <Alert className="border-green-200 bg-green-50">
           <AlertDescription className="text-green-800">
             회원가입이 완료되었습니다. 로그인 페이지로 이동합니다.

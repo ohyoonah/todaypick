@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { User } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/server";
 import {
   validateEmail,
@@ -43,7 +44,7 @@ const validateSignupData = (formData: SignUpData) => {
 };
 
 export async function signup(
-  prevState: { error: string; success: boolean },
+  prevState: { user: User | null; error: string },
   formData: FormData
 ) {
   const supabase = await createClient();
@@ -58,10 +59,13 @@ export async function signup(
   // 유효성 검사
   const validation = validateSignupData(data);
   if (validation.error) {
-    return { error: validation.error, success: false };
+    return { user: null, error: validation.error };
   }
 
-  const { error } = await supabase.auth.signUp({
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.signUp({
     email: data.email,
     password: data.password,
     options: {
@@ -72,9 +76,12 @@ export async function signup(
   });
 
   if (error) {
-    return { error: formatAuthError(error.message), success: false };
+    return {
+      user: null,
+      error: formatAuthError(error.message),
+    };
   }
 
   revalidatePath(ROUTE_PATH.HOME, "layout");
-  return { error: "", success: true };
+  return { user, error: "" };
 }

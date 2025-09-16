@@ -48,6 +48,7 @@ export const formatAuthError = (errorMessage: string): string => {
     "Invalid email": "올바른 이메일 형식을 입력해주세요",
     "Password mismatch": "비밀번호가 일치하지 않습니다",
     "Invalid nickname": "닉네임은 2-20자 사이여야 합니다",
+    "Failed to logout": "로그아웃 실패",
   };
 
   return (
