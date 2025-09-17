@@ -178,8 +178,8 @@ export default function TodayQuote() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
-        <h2 className="text-3xl font-bold text-slate-800 mb-2">오늘의 명언</h2>
-        <p className="text-slate-600 text-sm">
+        <h2 className="text-2xl font-bold text-foreground mb-2">오늘의 명언</h2>
+        <p className="text-muted-foreground text-sm">
           매일 자정에 새로운 명언이 업데이트됩니다.
         </p>
       </div>
