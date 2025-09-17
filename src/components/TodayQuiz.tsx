@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   getTodayQuiz,
@@ -8,6 +9,7 @@ import {
   getCategoryColor,
 } from "@/utils/quizUtils";
 import { Quiz } from "@/types/quiz";
+import { ROUTE_PATH } from "@/config/constants";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import TodayQuizResult from "@/components/TodayQuizResult";
@@ -21,6 +23,7 @@ export default function TodayQuiz() {
   const [isCorrect, setIsCorrect] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuthStore();
+  const router = useRouter();
 
   useEffect(() => {
     const loadQuiz = async () => {
@@ -55,7 +58,12 @@ export default function TodayQuiz() {
   };
 
   const handleSubmit = async () => {
-    if (selectedAnswer === null || !quiz || !user || isSubmitting) return;
+    if (selectedAnswer === null || !quiz || isSubmitting) return;
+
+    if (!user) {
+      router.push(ROUTE_PATH.LOGIN);
+      return;
+    }
 
     setIsSubmitting(true);
     try {
