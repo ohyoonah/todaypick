@@ -26,7 +26,6 @@ export const useFeed = ({
   page = 1,
 }: UseFeedProps = {}) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [feeds, setFeeds] = useState<Feed[]>([]);
   const [paginationData, setPaginationData] = useState<PaginationData>({
     feeds: [],
     totalCount: 0,
@@ -51,20 +50,12 @@ export const useFeed = ({
       const response = await fetch(url);
       const data = await response.json();
 
-      // 페이지네이션 데이터가 있는 경우
-      if (!!data.totalPages) {
-        setPaginationData(data);
-        setFeeds(data.feeds || []);
-      } else {
-        // 단순 피드 목록인 경우
-        setFeeds(data.feeds || data);
-        setPaginationData({
-          feeds: data.feeds || data,
-          totalCount: (data.feeds || data).length,
-          totalPages: 1,
-          currentPage: 1,
-        });
-      }
+      setPaginationData({
+        feeds: data.feeds || [],
+        totalCount: data.totalCount || (data.feeds || []).length,
+        totalPages: data.totalPages || 1,
+        currentPage: data.currentPage || 1,
+      });
     } catch (err) {
       console.error("피드를 불러오는 중 오류가 발생했습니다.", err);
     } finally {
@@ -81,9 +72,7 @@ export const useFeed = ({
       }
 
       try {
-        const isScraped = scrapedFeeds.has(feed.id);
-
-        if (isScraped) {
+        if (scrapedFeeds.has(feed.id)) {
           await feedService.unscrapFeed(feed.id);
           setScrapedFeeds((prev) => {
             const newSet = new Set(prev);
@@ -110,15 +99,34 @@ export const useFeed = ({
     setActiveTab(tab);
   }, []);
 
-  // 피드 가져오기
+  // 초기 스크랩 상태 로드
+  const initializeScrapedStatus = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const scrapedIds = await feedService.getUserScrapedFeedIds();
+      setScrapedFeeds(new Set(scrapedIds));
+    } catch (err) {
+      console.error("스크랩 상태 초기화 실패:", err);
+    }
+  }, [user]);
+
   useEffect(() => {
-    fetchFeeds();
-  }, [fetchFeeds]);
+    const initialize = async () => {
+      try {
+        await Promise.all([fetchFeeds(), initializeScrapedStatus()]);
+      } catch (err) {
+        console.error("초기화 실패:", err);
+      }
+    };
+
+    initialize();
+  }, [fetchFeeds, initializeScrapedStatus]);
 
   return {
     // 상태
     isLoading,
-    feeds,
+    feeds: paginationData.feeds,
     paginationData,
     scrapedFeeds,
     activeTab,

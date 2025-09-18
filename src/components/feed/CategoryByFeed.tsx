@@ -23,10 +23,10 @@ export default function CategoryByFeed() {
     isLoading,
     feeds,
     paginationData,
-    scrapedFeeds,
     activeTab,
     handleScrap,
     handleChangeTab,
+    isScraped,
   } = useFeed({
     category: validCategory,
     page,
@@ -69,7 +69,7 @@ export default function CategoryByFeed() {
               <FeedCard
                 key={feed.id}
                 feed={feed}
-                isScraped={scrapedFeeds.has(feed.id)}
+                isScraped={isScraped(feed.id)}
                 handleScrap={handleScrap}
               />
             ))}

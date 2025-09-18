@@ -12,11 +12,11 @@ export default function TodayFeed() {
   const {
     isLoading,
     feeds,
-    scrapedFeeds,
     activeTab,
     fetchFeeds,
     handleScrap,
     handleChangeTab,
+    isScraped,
   } = useFeed({
     limit: 3,
   });
@@ -38,7 +38,7 @@ export default function TodayFeed() {
             </p>
           </div>
           <Link
-            href={ROUTE_PATH.FEEDS + "?category=" + activeTab}
+            href={ROUTE_PATH.FEEDS + "?category=" + activeTab + "&page=1"}
             className="text-sm text-blue-500"
           >
             전체보기
@@ -59,13 +59,12 @@ export default function TodayFeed() {
               <SkeletonFeedCard key={index} />
             ))
           : feeds.map((feed) => (
-              <div key={feed.id}>
-                <FeedCard
-                  feed={feed}
-                  isScraped={scrapedFeeds.has(feed.id)}
-                  handleScrap={handleScrap}
-                />
-              </div>
+              <FeedCard
+                key={feed.id}
+                feed={feed}
+                isScraped={isScraped(feed.id)}
+                handleScrap={handleScrap}
+              />
             ))}
       </div>
     </div>

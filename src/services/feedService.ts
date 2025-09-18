@@ -21,7 +21,7 @@ function cleanDescription(description: string): string {
 // 서버사이드에서 RSS 피드를 가져오는 함수
 async function fetchRSSFeed(
   source: FeedSource,
-  limit: number = 3
+  limit: number = 12
 ): Promise<Feed[]> {
   try {
     const response = await fetch(source.rss_url, {
@@ -48,8 +48,8 @@ async function fetchRSSFeed(
       return [];
     }
 
-    return feed.items.map((item, index) => ({
-      id: `${source.id}-${index}-${Date.now()}`,
+    return feed.items.slice(0, limit).map((item, index) => ({
+      id: item.link || `${source.id}-${index}-${Date.now()}`,
       title: item.title || "제목 없음",
       description: cleanDescription(item.contentSnippet || item.content || ""),
       url: item.link || "",
@@ -135,7 +135,6 @@ export class FeedService {
     }
   }
 
-  // 새로운 페이지네이션 메서드 추가
   async getFeedsWithPagination(
     category: FeedCategory,
     page: number = 1,
@@ -227,7 +226,7 @@ export class FeedService {
     }
   }
 
-  // 스크랩 관련 메서드들 (현재 사용 중)
+  // 스크랩 관련 메서드들
   async scrapFeed(feed: Feed): Promise<ScrapedFeed> {
     const { data: user } = await this.supabase.auth.getUser();
 
@@ -274,6 +273,50 @@ export class FeedService {
       console.error("스크랩 해제 실패:", error);
       throw error;
     }
+  }
+
+  // 스크랩 상태 확인
+  async isFeedScraped(feedId: string): Promise<boolean> {
+    const { data: user } = await this.supabase.auth.getUser();
+
+    if (!user.user) {
+      return false;
+    }
+
+    const { data, error } = await this.supabase
+      .from("scraped_feeds")
+      .select("id")
+      .eq("user_id", user.user.id)
+      .eq("feed->>id", feedId)
+      .single();
+
+    if (error) {
+      console.error("스크랩 상태 확인 실패:", error);
+      return false;
+    }
+
+    return !!data;
+  }
+
+  // 사용자의 스크랩된 피드 ID 목록 가져오기
+  async getUserScrapedFeedIds(): Promise<string[]> {
+    const { data: user } = await this.supabase.auth.getUser();
+
+    if (!user.user) {
+      return [];
+    }
+
+    const { data, error } = await this.supabase
+      .from("scraped_feeds")
+      .select("feed->>id")
+      .eq("user_id", user.user.id);
+
+    if (error) {
+      console.error("스크랩 ID 목록 조회 실패:", error);
+      return [];
+    }
+
+    return data?.map((item) => item.id).filter(Boolean) || [];
   }
 }
 
