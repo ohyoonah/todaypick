@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useActionState, useCallback, useEffect, startTransition } from "react";
-import { User } from "@supabase/supabase-js";
 import { FiUser, FiLogOut } from "react-icons/fi";
 import { logout } from "@/app/login/action";
 import { ROUTE_PATH } from "@/config/constants";
 import { useAuthStore } from "@/stores/authStore";
 import { formatAuthError } from "@/utils/authUtils";
+import { getInitials } from "@/utils/profileUtils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -39,12 +39,6 @@ export default function Header() {
     });
   }, [formAction]);
 
-  const getUserInitials = useCallback((user: User) => {
-    const nickname = user.user_metadata?.nickname;
-    if (!nickname) return null;
-    return nickname.slice(0, 2).toUpperCase();
-  }, []);
-
   return (
     <header className="sticky top-0 z-50 bg-background border-b shadow-sm">
       <div className="flex justify-between items-center max-w-7xl mx-auto px-6 py-4">
@@ -66,7 +60,7 @@ export default function Header() {
                       alt="프로필"
                     />
                     <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                      {getUserInitials(user)}
+                      {getInitials(user.user_metadata?.nickname || "")}
                     </AvatarFallback>
                   </Avatar>
                 </Button>

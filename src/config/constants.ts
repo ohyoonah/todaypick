@@ -4,7 +4,7 @@ export const ROUTE_PATH = {
   LOGIN: "/login",
   SIGNUP: "/signup",
   PROFILE: "/profile",
-  FEEDS: "/feeds", // 피드 전체보기 페이지
+  FEEDS: "/feeds",
 } as const;
 
 // 폼 데이터
@@ -19,4 +19,14 @@ export const FORM_DATA = {
 export const FEED_CATEGORY = {
   IT_NEWS: "it_news",
   TECH_BLOG: "tech_blog",
+  SCRAPED: "scraped",
 } as const;
+
+// 프로필 탭
+export const PROFILE_TAB = {
+  SCRAPED_FEEDS: "scraped_feeds",
+  QUIZ_RECORDS: "quiz_records",
+  SCRAPED_QUOTES: "scraped_quotes",
+} as const;
+
+export type ProfileTabType = (typeof PROFILE_TAB)[keyof typeof PROFILE_TAB];

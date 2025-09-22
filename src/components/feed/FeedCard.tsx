@@ -11,30 +11,29 @@ import { useState } from "react";
 
 interface FeedCardProps {
   feed: Feed;
-  isScraped: boolean;
   handleScrap: (feed: Feed) => void;
 }
 
-export default function FeedCard({
-  feed,
-  isScraped,
-  handleScrap,
-}: FeedCardProps) {
+export default function FeedCard({ feed, handleScrap }: FeedCardProps) {
   const [imageLoading, setImageLoading] = useState(true);
 
+  if (!feed) return null;
+
+  const handleScrapClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleScrap(feed);
+  };
+
   return (
-    <Link href={feed.url} target="_blank">
+    <Link href={feed.url || ""} target="_blank">
       <Card className="h-full shadow-lg border-0 bg-white/90 backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden relative">
         <button
           className="absolute top-3 right-3 p-2 rounded-full bg-white/90 backdrop-blur-sm shadow-md hover:shadow-lg transform hover:scale-110 transition-all duration-300 z-20"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleScrap(feed);
-          }}
-          aria-label={isScraped ? "스크랩 해제" : "스크랩 추가"}
+          onClick={handleScrapClick}
+          aria-label={feed.isScraped ? "스크랩 해제" : "스크랩 추가"}
         >
-          {isScraped ? (
+          {feed.isScraped ? (
             <GoBookmarkFill className="text-xl text-blue-500" />
           ) : (
             <GoBookmark className="text-xl text-slate-400 hover:text-blue-500" />

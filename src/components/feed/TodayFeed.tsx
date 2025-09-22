@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
 import { ROUTE_PATH } from "@/config/constants";
 import { useFeed } from "@/hooks/useFeed";
 import FeedCategoryTab from "@/components/feed/FeedCategoryTab";
@@ -9,21 +8,11 @@ import FeedCard from "@/components/feed/FeedCard";
 import SkeletonFeedCard from "@/components/feed/SkeletonFeedCard";
 
 export default function TodayFeed() {
-  const {
-    isLoading,
-    feeds,
-    activeTab,
-    fetchFeeds,
-    handleScrap,
-    handleChangeTab,
-    isScraped,
-  } = useFeed({
-    limit: 3,
-  });
-
-  useEffect(() => {
-    fetchFeeds();
-  }, [fetchFeeds]);
+  const { isLoading, feeds, activeTab, handleScrap, handleChangeTab } = useFeed(
+    {
+      limit: 3,
+    }
+  );
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -59,12 +48,7 @@ export default function TodayFeed() {
               <SkeletonFeedCard key={index} />
             ))
           : feeds.map((feed) => (
-              <FeedCard
-                key={feed.id}
-                feed={feed}
-                isScraped={isScraped(feed.id)}
-                handleScrap={handleScrap}
-              />
+              <FeedCard key={feed.id} feed={feed} handleScrap={handleScrap} />
             ))}
       </div>
     </div>

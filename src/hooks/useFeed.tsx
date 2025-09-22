@@ -4,8 +4,8 @@ import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Feed, FeedCategory } from "@/types/feed";
 import { FEED_CATEGORY, ROUTE_PATH } from "@/config/constants";
-import { feedService } from "@/services/feedService";
 import { useAuthStore } from "@/stores/authStore";
+import { feedService } from "@/services/feedService";
 
 interface UseFeedProps {
   category?: FeedCategory;
@@ -32,27 +32,27 @@ export const useFeed = ({
     totalPages: 0,
     currentPage: 1,
   });
-  const [scrapedFeeds, setScrapedFeeds] = useState<Set<string>>(new Set());
-  const [activeTab, setActiveTab] = useState<FeedCategory>(category);
+  const [activeTab, setActiveTab] = useState<FeedCategory>(
+    category as FeedCategory
+  );
 
   const { user } = useAuthStore();
   const router = useRouter();
 
-  // 피드 데이터 가져오기
   const fetchFeeds = useCallback(async () => {
     setIsLoading(true);
 
     try {
-      let url = `/api/feeds?category=${activeTab}`;
-      if (page) url += `&page=${page}`;
-      if (limit) url += `&limit=${limit}`;
+      let url = `/api/feeds?category=${activeTab || category}`;
+      if (!!limit) url += `&limit=${limit}`;
+      if (!!page) url += `&page=${page}`;
 
       const response = await fetch(url);
       const data = await response.json();
 
       setPaginationData({
         feeds: data.feeds || [],
-        totalCount: data.totalCount || (data.feeds || []).length,
+        totalCount: data.totalCount || 0,
         totalPages: data.totalPages || 1,
         currentPage: data.currentPage || 1,
       });
@@ -61,9 +61,8 @@ export const useFeed = ({
     } finally {
       setIsLoading(false);
     }
-  }, [activeTab, page, limit]);
+  }, [category, page, limit, activeTab]);
 
-  // 스크랩 처리
   const handleScrap = useCallback(
     async (feed: Feed) => {
       if (!user) {
@@ -72,71 +71,59 @@ export const useFeed = ({
       }
 
       try {
-        if (scrapedFeeds.has(feed.id)) {
+        setPaginationData((prev) => ({
+          ...prev,
+          feeds: prev.feeds.map((f) => {
+            if (f.id === feed.id) {
+              return { ...f, isScraped: !f.isScraped };
+            }
+            return f;
+          }),
+        }));
+
+        if (feed.isScraped) {
           await feedService.unscrapFeed(feed.id);
-          setScrapedFeeds((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(feed.id);
-            return newSet;
-          });
         } else {
           await feedService.scrapFeed(feed);
-          setScrapedFeeds((prev) => new Set(prev).add(feed.id));
         }
       } catch (err) {
         console.error("스크랩 처리 실패:", err);
+
+        // 실패 시 원래 상태로 롤백
+        setPaginationData((prev) => ({
+          ...prev,
+          feeds: prev.feeds.map((f) => {
+            if (f.id === feed.id) {
+              return { ...f, isScraped: !f.isScraped };
+            }
+            return f;
+          }),
+        }));
+
         alert(
           err instanceof Error ? err.message : "스크랩 처리에 실패했습니다."
         );
       }
     },
-    [user, router, scrapedFeeds]
+    [user, router]
   );
 
-  // 탭 변경
   const handleChangeTab = useCallback((tab: FeedCategory) => {
     setPaginationData((prev) => ({ ...prev, currentPage: 1 }));
     setActiveTab(tab);
   }, []);
 
-  // 초기 스크랩 상태 로드
-  const initializeScrapedStatus = useCallback(async () => {
-    if (!user) return;
-
-    try {
-      const scrapedIds = await feedService.getUserScrapedFeedIds();
-      setScrapedFeeds(new Set(scrapedIds));
-    } catch (err) {
-      console.error("스크랩 상태 초기화 실패:", err);
-    }
-  }, [user]);
-
   useEffect(() => {
-    const initialize = async () => {
-      try {
-        await Promise.all([fetchFeeds(), initializeScrapedStatus()]);
-      } catch (err) {
-        console.error("초기화 실패:", err);
-      }
-    };
-
-    initialize();
-  }, [fetchFeeds, initializeScrapedStatus]);
+    fetchFeeds();
+  }, [fetchFeeds]);
 
   return {
-    // 상태
     isLoading,
     feeds: paginationData.feeds,
     paginationData,
-    scrapedFeeds,
     activeTab,
-
-    // 액션
     fetchFeeds,
     handleScrap,
     handleChangeTab,
-
-    // 유틸리티
-    isScraped: (feedId: string) => scrapedFeeds.has(feedId),
   };
 };

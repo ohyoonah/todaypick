@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/client";
-import { ScrapedFeed, Feed, FeedSource, FeedCategory } from "@/types/feed";
+import { Feed, FeedSource, FeedCategory } from "@/types/feed";
 import { feedSources } from "@/data/feeds";
+import { FEED_CATEGORY } from "@/config/constants";
 import Parser from "rss-parser";
 
 // 유틸리티 함수들
@@ -148,10 +149,12 @@ export class FeedService {
     try {
       const allFeeds: Feed[] = [];
       const filteredSources = category
-        ? feedSources.filter((source) => source.category === category)
+        ? feedSources.filter((source) => {
+            if (category === FEED_CATEGORY.SCRAPED) return true;
+            return source.category === category;
+          })
         : feedSources;
 
-      // 각 피드에서 가져올 개수 계산 (더 많은 데이터를 가져와서 정확한 페이지네이션을 위해)
       const itemsPerSource = Math.ceil(
         (page * limit * 2) / filteredSources.length
       );
@@ -160,7 +163,6 @@ export class FeedService {
         `처리할 피드 소스 수: ${filteredSources.length}, 소스당 ${itemsPerSource}개`
       );
 
-      // 각 RSS 피드를 병렬로 가져오기
       const batchSize = 5;
       const batches = [];
 
@@ -227,36 +229,43 @@ export class FeedService {
   }
 
   // 스크랩 관련 메서드들
-  async scrapFeed(feed: Feed): Promise<ScrapedFeed> {
+  async scrapFeed(feed: Feed) {
     const { data: user } = await this.supabase.auth.getUser();
 
     if (!user.user) {
       throw new Error("로그인이 필요합니다.");
     }
 
-    const { data, error } = await this.supabase
-      .from("scraped_feeds")
-      .insert({
-        user_id: user.user.id,
-        feed: feed,
-      })
-      .select()
-      .single();
+    const scrapedFeedsTable = this.supabase.from("scraped_feeds");
 
-    if (error) {
-      console.error("피드 스크랩 실패:", error);
-      throw error;
+    if (await this.isFeedScraped(feed.id)) {
+      const { error } = await scrapedFeedsTable
+        .delete()
+        .eq("user_id", user.user.id)
+        .eq("feed->>id", feed.id)
+        .single();
+
+      if (error) {
+        console.error("스크랩 해제 실패:", error);
+        throw error;
+      }
+    } else {
+      const { error } = await scrapedFeedsTable
+        .insert({
+          user_id: user.user.id,
+          feed: feed,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("피드 스크랩 실패:", error);
+        throw error;
+      }
     }
-
-    return {
-      id: data.id,
-      user_id: data.user_id,
-      feed: data.feed as Feed,
-      created_at: data.created_at,
-    };
   }
 
-  async unscrapFeed(feedId: string): Promise<void> {
+  async unscrapFeed(feedId: string) {
     const { data: user } = await this.supabase.auth.getUser();
 
     if (!user.user) {
@@ -296,27 +305,6 @@ export class FeedService {
     }
 
     return !!data;
-  }
-
-  // 사용자의 스크랩된 피드 ID 목록 가져오기
-  async getUserScrapedFeedIds(): Promise<string[]> {
-    const { data: user } = await this.supabase.auth.getUser();
-
-    if (!user.user) {
-      return [];
-    }
-
-    const { data, error } = await this.supabase
-      .from("scraped_feeds")
-      .select("feed->>id")
-      .eq("user_id", user.user.id);
-
-    if (error) {
-      console.error("스크랩 ID 목록 조회 실패:", error);
-      return [];
-    }
-
-    return data?.map((item) => item.id).filter(Boolean) || [];
   }
 }
 

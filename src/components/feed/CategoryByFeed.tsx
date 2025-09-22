@@ -26,7 +26,6 @@ export default function CategoryByFeed() {
     activeTab,
     handleScrap,
     handleChangeTab,
-    isScraped,
   } = useFeed({
     category: validCategory,
     page,
@@ -66,12 +65,7 @@ export default function CategoryByFeed() {
               <SkeletonFeedCard key={index} />
             ))
           : feeds.map((feed) => (
-              <FeedCard
-                key={feed.id}
-                feed={feed}
-                isScraped={isScraped(feed.id)}
-                handleScrap={handleScrap}
-              />
+              <FeedCard key={feed.id} feed={feed} handleScrap={handleScrap} />
             ))}
       </div>
 

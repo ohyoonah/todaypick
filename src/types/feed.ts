@@ -10,15 +10,9 @@ export interface Feed {
   source: string;
   published_at: string;
   category: FeedCategory;
+  isScraped?: boolean;
   image_url?: string;
   author?: string;
-}
-
-export interface ScrapedFeed {
-  id: string;
-  user_id: string;
-  feed: Feed;
-  created_at: string;
 }
 
 export interface FeedSource {
