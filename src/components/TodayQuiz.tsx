@@ -139,7 +139,7 @@ export default function TodayQuiz() {
       {!quiz ? (
         renderSkeletonCard
       ) : (
-        <Card className="w-full">
+        <Card className="w-full shadow-sm">
           <CardHeader>
             <div className="flex items-center justify-between">
               <span

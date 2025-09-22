@@ -32,7 +32,7 @@ export default function ProfilePage() {
   const renderProfileSkeleton = useMemo(() => {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
-        <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+        <Card className="shadow-sm">
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
               <Skeleton className="h-24 w-24 rounded-full" />
@@ -55,7 +55,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
+    <div className="min-h-screen bg-background p-4">
       {loading ? (
         renderProfileSkeleton
       ) : (
