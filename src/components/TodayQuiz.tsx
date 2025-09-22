@@ -14,7 +14,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import TodayQuizResult from "@/components/TodayQuizResult";
 import { useAuthStore } from "@/stores/authStore";
-import { QuizService } from "@/services/quizService";
 
 export default function TodayQuiz() {
   const [quiz, setQuiz] = useState<Quiz | null>(null);
@@ -31,19 +30,21 @@ export default function TodayQuiz() {
         const todayQuiz = getTodayQuiz();
         setQuiz(todayQuiz);
 
+        if (!user) return;
+
         // 로그인한 사용자의 경우 기존 답안 확인
-        if (user) {
-          const result = await QuizService.getUserQuizResult(
-            user.id,
-            todayQuiz.id
-          );
+        const response = await fetch(`/api/quizzes?quizId=${todayQuiz.id}`);
 
-          if (!result) return;
-
-          setSelectedAnswer(result.selected_answer);
-          setIsCorrect(result.is_correct);
-          setShowResult(true);
+        if (!response.ok && response.status !== 401) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
+
+        const result = await response.json();
+        if (!result) return;
+
+        setSelectedAnswer(result.selected_answer);
+        setIsCorrect(result.is_correct);
+        setShowResult(true);
       } catch (error) {
         console.error("퀴즈를 불러오는 중 오류가 발생했습니다:", error);
       }
@@ -67,11 +68,22 @@ export default function TodayQuiz() {
 
     setIsSubmitting(true);
     try {
-      const result = await QuizService.submitQuizAnswer(
-        quiz.id,
-        selectedAnswer,
-        user.id
-      );
+      const response = await fetch("/api/quizzes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          selectedAnswer,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "답안 제출에 실패했습니다.");
+      }
+
+      const result = await response.json();
 
       if (result) {
         setIsCorrect(result.isCorrect);
@@ -79,7 +91,11 @@ export default function TodayQuiz() {
       }
     } catch (error) {
       console.error("답안 제출 실패:", error);
-      alert("답안 제출에 실패했습니다. 다시 시도해주세요.");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "답안 제출에 실패했습니다. 다시 시도해주세요."
+      );
     } finally {
       setIsSubmitting(false);
     }

@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileTabs from "@/components/profile/ProfileTabs";
 import ScrapedFeedsTab from "@/components/profile/ScrapedFeedsTab";
+import QuizRecordsTab from "@/components/profile/QuizRecordsTab";
 
 export default function ProfilePage() {
   const { loading } = useAuthStore();
@@ -18,7 +19,7 @@ export default function ProfilePage() {
   const renderActiveTab = useMemo(() => {
     switch (activeTab) {
       case PROFILE_TAB.QUIZ_RECORDS:
-        return;
+        return <QuizRecordsTab />;
       case PROFILE_TAB.SCRAPED_QUOTES:
         return;
       case PROFILE_TAB.SCRAPED_FEEDS:
