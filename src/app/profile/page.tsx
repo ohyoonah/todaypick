@@ -9,6 +9,7 @@ import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileTabs from "@/components/profile/ProfileTabs";
 import ScrapedFeedsTab from "@/components/profile/ScrapedFeedsTab";
 import QuizRecordsTab from "@/components/profile/QuizRecordsTab";
+import ScrapedQuotesTab from "@/components/profile/ScrapedQuotesTab";
 
 export default function ProfilePage() {
   const { loading } = useAuthStore();
@@ -21,7 +22,7 @@ export default function ProfilePage() {
       case PROFILE_TAB.QUIZ_RECORDS:
         return <QuizRecordsTab />;
       case PROFILE_TAB.SCRAPED_QUOTES:
-        return;
+        return <ScrapedQuotesTab />;
       case PROFILE_TAB.SCRAPED_FEEDS:
       default:
         return <ScrapedFeedsTab />;

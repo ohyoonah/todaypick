@@ -75,13 +75,13 @@ export const useFeed = ({
           ...prev,
           feeds: prev.feeds.map((f) => {
             if (f.id === feed.id) {
-              return { ...f, isScraped: !f.isScraped };
+              return { ...f, is_scraped: !f.is_scraped };
             }
             return f;
           }),
         }));
 
-        if (feed.isScraped) {
+        if (feed.is_scraped) {
           await feedService.unscrapFeed(feed.id);
         } else {
           await feedService.scrapFeed(feed);
@@ -94,7 +94,7 @@ export const useFeed = ({
           ...prev,
           feeds: prev.feeds.map((f) => {
             if (f.id === feed.id) {
-              return { ...f, isScraped: !f.isScraped };
+              return { ...f, is_scraped: !f.is_scraped };
             }
             return f;
           }),

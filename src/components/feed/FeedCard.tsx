@@ -31,9 +31,9 @@ export default function FeedCard({ feed, handleScrap }: FeedCardProps) {
         <button
           className="absolute top-3 right-3 p-2 rounded-full bg-white/90 backdrop-blur-sm shadow-md hover:shadow-lg transform hover:scale-110 transition-all duration-300 z-20"
           onClick={handleScrapClick}
-          aria-label={feed.isScraped ? "스크랩 해제" : "스크랩 추가"}
+          aria-label={feed.is_scraped ? "스크랩 해제" : "스크랩 추가"}
         >
-          {feed.isScraped ? (
+          {feed.is_scraped ? (
             <GoBookmarkFill className="text-xl text-blue-500" />
           ) : (
             <GoBookmark className="text-xl text-slate-400 hover:text-blue-500" />

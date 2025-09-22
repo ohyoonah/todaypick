@@ -9,4 +9,5 @@ export interface ScrapedQuote {
   user_id: string;
   quote: Quote;
   created_at: string;
+  is_scraped?: boolean;
 }

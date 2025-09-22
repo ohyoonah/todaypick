@@ -1,6 +1,6 @@
 import TodayFeed from "@/components/feed/TodayFeed";
 import TodayQuiz from "@/components/TodayQuiz";
-import TodayQuote from "@/components/TodayQuote";
+import TodayQuote from "@/components/quote/TodayQuote";
 
 export default function Home() {
   return (

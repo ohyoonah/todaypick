@@ -10,7 +10,7 @@ export interface Feed {
   source: string;
   published_at: string;
   category: FeedCategory;
-  isScraped?: boolean;
+  is_scraped?: boolean;
   image_url?: string;
   author?: string;
 }

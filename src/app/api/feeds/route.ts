@@ -32,7 +32,7 @@ const getScrapedFeeds = async (userId: string, page: number, limit: number) => {
 
   return {
     feeds:
-      scrapedFeeds?.map(({ feed }) => ({ ...feed, isScraped: true })) || [],
+      scrapedFeeds?.map(({ feed }) => ({ ...feed, is_scraped: true })) || [],
     totalCount: count || 0,
     totalPages: Math.ceil((count || 0) / limit),
     currentPage: page,
@@ -56,7 +56,7 @@ const getFeedsWithScrapedStatus = async (
   if (!userId) {
     return {
       ...result,
-      feeds: result.feeds.map((feed) => ({ ...feed, isScraped: false })),
+      feeds: result.feeds.map((feed) => ({ ...feed, is_scraped: false })),
     };
   }
 
@@ -67,7 +67,7 @@ const getFeedsWithScrapedStatus = async (
 
   const feedsWithStatus = result.feeds.map((feed) => ({
     ...feed,
-    isScraped: scrapedFeeds?.some((item) => item.id === feed.id) || false,
+    is_scraped: scrapedFeeds?.some((item) => item.id === feed.id) || false,
   }));
 
   return {
