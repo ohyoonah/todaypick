@@ -39,7 +39,7 @@ export function SignUpForm() {
   return (
     <form action={formAction} className="space-y-4 w-full">
       <div className="space-y-2">
-        <Label htmlFor={FORM_DATA.NICKNAME} className="text-sm text-gray-700">
+        <Label htmlFor={FORM_DATA.NICKNAME} className="text-sm text-foreground">
           닉네임
         </Label>
         <Input
@@ -53,7 +53,7 @@ export function SignUpForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={FORM_DATA.EMAIL} className="text-sm text-gray-700">
+        <Label htmlFor={FORM_DATA.EMAIL} className="text-sm text-foreground">
           이메일
         </Label>
         <Input
@@ -67,7 +67,7 @@ export function SignUpForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={FORM_DATA.PASSWORD} className="text-sm text-gray-700">
+        <Label htmlFor={FORM_DATA.PASSWORD} className="text-sm text-foreground">
           비밀번호
         </Label>
         <div className="relative">
@@ -82,7 +82,7 @@ export function SignUpForm() {
           <button
             type="button"
             onClick={handleTogglePasswordVisibility}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
             {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
           </button>
@@ -92,7 +92,7 @@ export function SignUpForm() {
       <div className="space-y-2">
         <Label
           htmlFor={FORM_DATA.CONFIRM_PASSWORD}
-          className="text-sm text-gray-700"
+          className="text-sm text-foreground"
         >
           비밀번호 확인
         </Label>
@@ -108,7 +108,7 @@ export function SignUpForm() {
           <button
             type="button"
             onClick={handleToggleConfirmPasswordVisibility}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
             {showConfirmPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
           </button>
@@ -116,16 +116,14 @@ export function SignUpForm() {
       </div>
 
       {state.error && (
-        <Alert variant="destructive" className="border-red-200 bg-red-50">
-          <AlertDescription className="text-red-800">
-            {state.error}
-          </AlertDescription>
+        <Alert variant="destructive">
+          <AlertDescription>{state.error}</AlertDescription>
         </Alert>
       )}
 
       {!!state.user && !isPending && (
-        <Alert className="border-green-200 bg-green-50">
-          <AlertDescription className="text-green-800">
+        <Alert>
+          <AlertDescription>
             회원가입이 완료되었습니다. 로그인 페이지로 이동합니다.
           </AlertDescription>
         </Alert>

@@ -12,14 +12,14 @@ export default function FeedCategoryTab({
   handleChangeTab,
 }: FeedCategoryTabProps) {
   return (
-    <div className="flex space-x-1 mb-6 bg-white/50 backdrop-blur-sm rounded-lg p-1 shadow-lg">
+    <div className="flex space-x-1 mb-6 bg-muted/50 rounded-lg p-1 shadow-sm">
       <button
         onClick={() => handleChangeTab(FEED_CATEGORY.IT_NEWS)}
         className={cn(
-          "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300",
+          "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200",
           activeTab === FEED_CATEGORY.IT_NEWS
-            ? "bg-white shadow-md text-blue-600"
-            : "text-slate-600 hover:text-blue-600 hover:bg-white/50"
+            ? "bg-background shadow-sm text-primary"
+            : "text-muted-foreground hover:text-primary hover:bg-background/50"
         )}
       >
         IT 기사
@@ -27,10 +27,10 @@ export default function FeedCategoryTab({
       <button
         onClick={() => handleChangeTab(FEED_CATEGORY.TECH_BLOG)}
         className={cn(
-          "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300",
+          "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200",
           activeTab === FEED_CATEGORY.TECH_BLOG
-            ? "bg-white shadow-md text-blue-600"
-            : "text-slate-600 hover:text-blue-600 hover:bg-white/50"
+            ? "bg-background shadow-sm text-primary"
+            : "text-muted-foreground hover:text-primary hover:bg-background/50"
         )}
       >
         테크 블로그

@@ -34,7 +34,7 @@ export function LoginForm() {
   return (
     <form action={formAction} className="space-y-4 w-full">
       <div className="space-y-2">
-        <Label htmlFor={FORM_DATA.EMAIL} className="text-sm text-gray-700">
+        <Label htmlFor={FORM_DATA.EMAIL} className="text-sm text-foreground">
           이메일
         </Label>
         <Input
@@ -48,7 +48,7 @@ export function LoginForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={FORM_DATA.PASSWORD} className="text-sm text-gray-700">
+        <Label htmlFor={FORM_DATA.PASSWORD} className="text-sm text-foreground">
           비밀번호
         </Label>
         <div className="relative">
@@ -63,7 +63,7 @@ export function LoginForm() {
           <button
             type="button"
             onClick={handleTogglePasswordVisibility}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
             {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
           </button>
@@ -71,10 +71,8 @@ export function LoginForm() {
       </div>
 
       {state?.error && (
-        <Alert variant="destructive" className="border-red-200 bg-red-50">
-          <AlertDescription className="text-red-800">
-            {state.error}
-          </AlertDescription>
+        <Alert variant="destructive">
+          <AlertDescription>{state.error}</AlertDescription>
         </Alert>
       )}
 

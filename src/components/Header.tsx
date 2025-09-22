@@ -40,9 +40,12 @@ export default function Header() {
   }, [formAction]);
 
   return (
-    <header className="sticky top-0 z-50 bg-background border-b shadow-sm">
+    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b shadow-sm">
       <div className="flex justify-between items-center max-w-7xl mx-auto px-6 py-4">
-        <Link href={ROUTE_PATH.HOME} className="text-xl font-bold">
+        <Link
+          href={ROUTE_PATH.HOME}
+          className="text-xl font-bold text-foreground"
+        >
           TodayPick
         </Link>
 
@@ -66,7 +69,7 @@ export default function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="w-56 bg-background"
+                className="w-56 bg-background border shadow-md"
                 align="end"
                 forceMount
               >
@@ -93,7 +96,7 @@ export default function Header() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={handleLogOut}
-                  className="text-red-600 cursor-pointer"
+                  className="text-destructive cursor-pointer"
                   disabled={isPending}
                 >
                   <FiLogOut className="mr-2 h-4 w-4" />
