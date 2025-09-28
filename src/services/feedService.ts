@@ -9,17 +9,17 @@ function cleanDescription(description: string): string {
   if (!description) return "";
 
   return description
-    .replace(/<[^>]*>/g, "") // HTML 태그 제거
-    .replace(/&amp;/g, "&") // &amp; 변환
-    .replace(/&lt;/g, "<") // &lt; 변환
-    .replace(/&gt;/g, ">") // &gt; 변환
-    .replace(/&quot;/g, '"') // &quot; 변환
-    .replace(/&nbsp;/g, " ") // &nbsp; 제거
-    .replace(/\s+/g, " ") // 연속된 공백을 하나로
+    .replace(/<[^>]*>/g, "")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
-// 서버사이드에서 RSS 피드를 가져오는 함수
+// RSS 피드 수집 함수
 async function fetchRSSFeed(
   source: FeedSource,
   limit: number = 12
@@ -70,90 +70,85 @@ async function fetchRSSFeed(
   }
 }
 
-export class FeedService {
-  private supabase = createClient();
+// 배치 처리 함수
+async function processBatches<T, R>(
+  items: T[],
+  processor: (batch: T[]) => Promise<R[]>
+): Promise<R[]> {
+  const results: R[] = [];
+  const batchSize = 5;
+  const batchDelay = 1000;
 
-  async getFeeds(category: FeedCategory, limit: number = 12): Promise<Feed[]> {
-    try {
-      const allFeeds: Feed[] = [];
-      const filteredSources = category
-        ? feedSources.filter((source) => source.category === category)
-        : feedSources;
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    const batchResults = await processor(batch);
+    results.push(...batchResults);
 
-      // 각 피드에서 가져올 개수 계산
-      const itemsPerSource = Math.ceil(limit / filteredSources.length);
-
-      console.log(
-        `처리할 피드 소스 수: ${filteredSources.length}, 소스당 ${itemsPerSource}개`
-      );
-
-      // 각 RSS 피드를 병렬로 가져오기
-      const batchSize = 5;
-      const batches = [];
-
-      for (let i = 0; i < filteredSources.length; i += batchSize) {
-        batches.push(filteredSources.slice(i, i + batchSize));
-      }
-
-      for (const batch of batches) {
-        const feedPromises = batch.map((source) =>
-          fetchRSSFeed(source, itemsPerSource)
-        );
-        const feedResults = await Promise.allSettled(feedPromises);
-
-        feedResults.forEach((result, index) => {
-          if (result.status === "fulfilled" && result.value) {
-            allFeeds.push(...result.value);
-            console.log(
-              `${batch[index].name}: ${result.value.length}개 피드 수집`
-            );
-          } else {
-            console.error(
-              `RSS 피드 가져오기 실패 (${batch[index].name}):`,
-              result.status === "rejected" ? result.reason : "알 수 없는 오류"
-            );
-          }
-        });
-
-        if (batches.indexOf(batch) < batches.length - 1) {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
-      }
-
-      console.log(`총 수집된 피드 수: ${allFeeds.length}`);
-
-      // 최신순으로 정렬하고 limit만큼 반환
-      return allFeeds
-        .sort(
-          (a, b) =>
-            new Date(b.published_at).getTime() -
-            new Date(a.published_at).getTime()
-        )
-        .slice(0, limit);
-    } catch (error) {
-      console.error("피드 조회 중 오류:", error);
-      return [];
+    // 마지막 배치가 아니면 지연
+    if (i + batchSize < items.length) {
+      await new Promise((resolve) => setTimeout(resolve, batchDelay));
     }
   }
+
+  return results;
+}
+
+// 피드 수집 함수
+async function collectFeeds(
+  sources: FeedSource[],
+  itemsPerSource: number
+): Promise<Feed[]> {
+  const processBatch = async (batch: FeedSource[]) => {
+    const feedPromises = batch.map((source) =>
+      fetchRSSFeed(source, itemsPerSource)
+    );
+    const feedResults = await Promise.allSettled(feedPromises);
+
+    const batchFeeds: Feed[] = [];
+    feedResults.forEach((result, index) => {
+      if (result.status === "fulfilled" && result.value) {
+        batchFeeds.push(...result.value);
+        console.log(`${batch[index].name}: ${result.value.length}개 피드 수집`);
+      } else {
+        console.error(
+          `RSS 피드 가져오기 실패 (${batch[index].name}):`,
+          result.status === "rejected" ? result.reason : "알 수 없는 오류"
+        );
+      }
+    });
+
+    return batchFeeds;
+  };
+
+  const feeds = await processBatches(sources, processBatch);
+  return feeds;
+}
+
+// 빈 결과 반환 함수
+function getEmptyResult(page: number) {
+  return {
+    feeds: [],
+    totalCount: 0,
+    totalPages: 0,
+    currentPage: page,
+  };
+}
+
+// 메인 서비스 클래스
+export class FeedService {
+  private supabase = createClient();
 
   async getFeedsWithPagination(
     category: FeedCategory,
     page: number = 1,
     limit: number = 12
-  ): Promise<{
-    feeds: Feed[];
-    totalCount: number;
-    totalPages: number;
-    currentPage: number;
-  }> {
+  ) {
     try {
-      const allFeeds: Feed[] = [];
-      const filteredSources = category
-        ? feedSources.filter((source) => {
-            if (category === FEED_CATEGORY.SCRAPED) return true;
-            return source.category === category;
-          })
-        : feedSources;
+      const filteredSources = this.getFilteredSources(category);
+
+      if (filteredSources.length === 0) {
+        return getEmptyResult(page);
+      }
 
       const itemsPerSource = Math.ceil(
         (page * limit * 2) / filteredSources.length
@@ -163,48 +158,15 @@ export class FeedService {
         `처리할 피드 소스 수: ${filteredSources.length}, 소스당 ${itemsPerSource}개`
       );
 
-      const batchSize = 5;
-      const batches = [];
-
-      for (let i = 0; i < filteredSources.length; i += batchSize) {
-        batches.push(filteredSources.slice(i, i + batchSize));
-      }
-
-      for (const batch of batches) {
-        const feedPromises = batch.map((source) =>
-          fetchRSSFeed(source, itemsPerSource)
-        );
-        const feedResults = await Promise.allSettled(feedPromises);
-
-        feedResults.forEach((result, index) => {
-          if (result.status === "fulfilled" && result.value) {
-            allFeeds.push(...result.value);
-            console.log(
-              `${batch[index].name}: ${result.value.length}개 피드 수집`
-            );
-          } else {
-            console.error(
-              `RSS 피드 가져오기 실패 (${batch[index].name}):`,
-              result.status === "rejected" ? result.reason : "알 수 없는 오류"
-            );
-          }
-        });
-
-        if (batches.indexOf(batch) < batches.length - 1) {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
-      }
-
+      const allFeeds = await collectFeeds(filteredSources, itemsPerSource);
       console.log(`총 수집된 피드 수: ${allFeeds.length}`);
 
-      // 최신순으로 정렬
       const sortedFeeds = allFeeds.sort(
         (a, b) =>
           new Date(b.published_at).getTime() -
           new Date(a.published_at).getTime()
       );
 
-      // 페이지네이션 계산
       const totalCount = sortedFeeds.length;
       const totalPages = Math.ceil(totalCount / limit);
       const startIndex = (page - 1) * limit;
@@ -219,12 +181,7 @@ export class FeedService {
       };
     } catch (error) {
       console.error("피드 조회 중 오류:", error);
-      return {
-        feeds: [],
-        totalCount: 0,
-        totalPages: 0,
-        currentPage: page,
-      };
+      return getEmptyResult(page);
     }
   }
 
@@ -236,27 +193,24 @@ export class FeedService {
       throw new Error("로그인이 필요합니다.");
     }
 
+    const isScraped = await this.isFeedScraped(feed.id);
     const scrapedFeedsTable = this.supabase.from("scraped_feeds");
 
-    if (await this.isFeedScraped(feed.id)) {
+    if (isScraped) {
       const { error } = await scrapedFeedsTable
         .delete()
         .eq("user_id", user.user.id)
-        .eq("feed->>id", feed.id)
-        .single();
+        .eq("feed->>id", feed.id);
 
       if (error) {
         console.error("스크랩 해제 실패:", error);
         throw error;
       }
     } else {
-      const { error } = await scrapedFeedsTable
-        .insert({
-          user_id: user.user.id,
-          feed: feed,
-        })
-        .select()
-        .single();
+      const { error } = await scrapedFeedsTable.insert({
+        user_id: user.user.id,
+        feed: feed,
+      });
 
       if (error) {
         console.error("피드 스크랩 실패:", error);
@@ -284,7 +238,6 @@ export class FeedService {
     }
   }
 
-  // 스크랩 상태 확인
   async isFeedScraped(feedId: string): Promise<boolean> {
     const { data: user } = await this.supabase.auth.getUser();
 
@@ -296,15 +249,21 @@ export class FeedService {
       .from("scraped_feeds")
       .select("id")
       .eq("user_id", user.user.id)
-      .eq("feed->>id", feedId)
-      .single();
+      .eq("feed->>id", feedId);
 
     if (error) {
       console.error("스크랩 상태 확인 실패:", error);
       return false;
     }
 
-    return !!data;
+    return data && data.length > 0;
+  }
+
+  private getFilteredSources(category: FeedCategory) {
+    if (category === FEED_CATEGORY.SCRAPED) {
+      return feedSources;
+    }
+    return feedSources.filter((source) => source.category === category);
   }
 }
 

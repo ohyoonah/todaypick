@@ -2,17 +2,16 @@
 
 import Link from "next/link";
 import { ROUTE_PATH } from "@/config/constants";
-import { useFeed } from "@/hooks/useFeed";
+import { useInfiniteFeed } from "@/hooks/useInfiniteFeed";
 import FeedCategoryTab from "@/components/feed/FeedCategoryTab";
 import FeedCard from "@/components/feed/FeedCard";
 import SkeletonFeedCard from "@/components/feed/SkeletonFeedCard";
 
 export default function TodayFeed() {
-  const { isLoading, feeds, activeTab, handleScrap, handleChangeTab } = useFeed(
-    {
+  const { isLoading, feeds, activeTab, handleScrap, handleChangeTab } =
+    useInfiniteFeed({
       limit: 3,
-    }
-  );
+    });
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -27,7 +26,7 @@ export default function TodayFeed() {
             </p>
           </div>
           <Link
-            href={ROUTE_PATH.FEEDS + "?category=" + activeTab + "&page=1"}
+            href={ROUTE_PATH.FEEDS + "?category=" + activeTab}
             className="text-sm text-blue-500"
           >
             전체보기
@@ -35,23 +34,22 @@ export default function TodayFeed() {
         </div>
       </div>
 
-      {/* 탭 내비게이션 */}
       <FeedCategoryTab
         activeTab={activeTab}
         handleChangeTab={handleChangeTab}
       />
 
-      {/* 피드 그리드 */}
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {isLoading || feeds.length === 0
           ? Array.from({ length: 3 }).map((_, index) => (
               <SkeletonFeedCard key={index} />
             ))
-          : feeds.map((feed) => (
-              <FeedCard key={feed.id} feed={feed} handleScrap={handleScrap} />
-            ))}
+          : feeds
+              .slice(0, 3)
+              .map((feed) => (
+                <FeedCard key={feed.id} feed={feed} handleScrap={handleScrap} />
+              ))}
       </div>
     </div>
   );
-  return;
 }

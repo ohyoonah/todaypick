@@ -5,40 +5,39 @@ import { useCallback } from "react";
 import { FeedCategory } from "@/types/feed";
 import { FEED_CATEGORY } from "@/config/constants";
 import { getValidCategory } from "@/utils/feedUtils";
-import { useFeed } from "@/hooks/useFeed";
+import { useInfiniteFeed } from "@/hooks/useInfiniteFeed";
 import FeedCategoryTab from "@/components/feed/FeedCategoryTab";
 import FeedCard from "@/components/feed/FeedCard";
 import SkeletonFeedCard from "@/components/feed/SkeletonFeedCard";
-import FeedPagination from "@/components/feed/FeedPagination";
+import InfiniteScrollTrigger from "@/components/feed/InfiniteScrollTrigger";
 
 export default function CategoryByFeed() {
-  const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const category = searchParams.get("category");
-  const page = parseInt(searchParams.get("page") || "1");
   const validCategory = getValidCategory(category);
+  const router = useRouter();
+  const pathname = usePathname();
 
   const {
     isLoading,
+    isFetchingNextPage,
+    hasNextPage,
     feeds,
-    paginationData,
     activeTab,
     handleScrap,
     handleChangeTab,
-  } = useFeed({
+    fetchNextPage,
+  } = useInfiniteFeed({
     category: validCategory,
-    page,
     limit: 12,
   });
 
-  // 탭 변경
   const handleTabChange = useCallback(
     (tab: FeedCategory) => {
       handleChangeTab(tab);
-      router.push(`${pathname}?category=${tab}&page=1`);
+      router.push(`${pathname}?category=${tab}`);
     },
-    [router, pathname, handleChangeTab]
+    [handleChangeTab, router, pathname]
   );
 
   return (
@@ -60,7 +59,7 @@ export default function CategoryByFeed() {
       />
 
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {isLoading || feeds.length === 0
+        {isLoading
           ? Array.from({ length: 12 }).map((_, index) => (
               <SkeletonFeedCard key={index} />
             ))
@@ -69,13 +68,11 @@ export default function CategoryByFeed() {
             ))}
       </div>
 
-      {/* 페이지네이션 */}
-      {paginationData.totalPages > 1 && !isLoading && (
-        <FeedPagination
-          totalPages={paginationData.totalPages}
-          currentPage={paginationData.currentPage}
-        />
-      )}
+      <InfiniteScrollTrigger
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        fetchNextPage={fetchNextPage}
+      />
     </div>
   );
 }
