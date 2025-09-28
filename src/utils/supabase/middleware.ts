@@ -31,28 +31,21 @@ export async function updateSession(request: NextRequest) {
   );
 
   try {
-    // IMPORTANT: Don't remove getClaims()
-    const { data } = await supabase.auth.getClaims();
-    const user = data?.claims;
-
-    // 공개 경로들 (인증 불필요)
-    const publicPaths = [ROUTE_PATH.HOME, ROUTE_PATH.LOGIN, ROUTE_PATH.SIGNUP];
-    const isPublicPath = publicPaths.some((path) =>
-      request.nextUrl.pathname.startsWith(path)
-    );
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     // 인증이 필요한 경로에서 사용자가 없는 경우
-    if (!user && !isPublicPath) {
+    const isProfilePath = request.nextUrl.pathname.startsWith(
+      ROUTE_PATH.PROFILE
+    );
+    if (!user && isProfilePath) {
       const url = request.nextUrl.clone();
       url.pathname = ROUTE_PATH.LOGIN;
       return NextResponse.redirect(url);
     }
   } catch (error) {
-    if (error instanceof Error && error.message === "Auth session missing!") {
-      console.log("No active session in middleware - continuing");
-    } else {
-      console.error("Middleware auth error:", error);
-    }
+    console.error("Middleware auth error:", error);
   }
 
   return supabaseResponse;
