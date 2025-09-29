@@ -6,7 +6,7 @@ import { FEED_CATEGORY } from "@/config/constants";
 
 const parseFeedParams = (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
-  const category = searchParams.get("category");
+  const category = searchParams.get("category") as FeedCategory;
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "12");
   return { category, page, limit };
@@ -39,43 +39,6 @@ const getScrapedFeeds = async (userId: string, page: number, limit: number) => {
   };
 };
 
-const getFeedsWithScrapedStatus = async (
-  category: FeedCategory,
-  page: number,
-  limit: number,
-  userId?: string
-) => {
-  const supabase = await createClient();
-
-  const result = await feedService.getFeedsWithPagination(
-    category,
-    page,
-    limit
-  );
-
-  if (!userId) {
-    return {
-      ...result,
-      feeds: result.feeds.map((feed) => ({ ...feed, is_scraped: false })),
-    };
-  }
-
-  const { data: scrapedFeeds } = await supabase
-    .from("scraped_feeds")
-    .select("feed->>id")
-    .eq("user_id", userId);
-
-  const feedsWithStatus = result.feeds.map((feed) => ({
-    ...feed,
-    is_scraped: scrapedFeeds?.some((item) => item.id === feed.id) || false,
-  }));
-
-  return {
-    ...result,
-    feeds: feedsWithStatus,
-  };
-};
-
 export async function GET(request: NextRequest) {
   try {
     const { category, page, limit } = parseFeedParams(request);
@@ -88,17 +51,34 @@ export async function GET(request: NextRequest) {
       if (!user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
+
       const result = await getScrapedFeeds(user.id, page, limit);
       return NextResponse.json(result, { status: 200 });
     } else {
-      const result = await getFeedsWithScrapedStatus(
-        category as FeedCategory,
+      const result = await feedService.getFeedsWithPagination(
+        category,
         page,
-        limit,
-        user?.id
+        limit
       );
 
-      return NextResponse.json(result, { status: 200 });
+      if (!user) {
+        return NextResponse.json({
+          ...result,
+          feeds: result.feeds.map((feed) => ({ ...feed, is_scraped: false })),
+        });
+      }
+
+      const { data: scrapedFeeds } = await supabase
+        .from("scraped_feeds")
+        .select("feed->>id")
+        .eq("user_id", user.id);
+
+      const feedsWithStatus = result.feeds.map((feed) => ({
+        ...feed,
+        is_scraped: scrapedFeeds?.some((item) => item.id === feed.id) || false,
+      }));
+
+      return NextResponse.json({ ...result, feeds: feedsWithStatus });
     }
   } catch (error) {
     console.error("피드 API 오류:", error);

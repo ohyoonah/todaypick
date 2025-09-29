@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Header from "@/components/Header";
 import { AuthProvider } from "@/providers/AuthProvider";
+import { QueryProvider } from "@/providers/QueryProvider";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "TodayPick - 개인 맞춤 아티클 피드",
-  description: "좋아하는 아티클을 발견하고 북마크하세요",
+  title: "TodayPick - 하루 10분, IT 전문가로 성장하는 습관",
+  description: "IT 최신 뉴스부터 상식 퀴즈까지 오늘 하루 10분 알아보기",
 };
 
 export default function RootLayout({
@@ -19,10 +20,12 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={inter.className}>
-        <AuthProvider>
-          <Header />
-          {children}
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <Header />
+            {children}
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );
