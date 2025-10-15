@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function Header() {
-  const { user, setUser } = useAuthStore();
+  const { user, userProfile, setUser } = useAuthStore();
   const [state, formAction, isPending] = useActionState(logout, { error: "" });
 
   useEffect(() => {
@@ -59,11 +59,11 @@ export default function Header() {
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarImage
-                      src={user.user_metadata?.avatar_url}
+                      src={userProfile?.avatar_url || undefined}
                       alt="프로필"
                     />
                     <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                      {getInitials(user.user_metadata?.nickname || "")}
+                      {getInitials(userProfile?.nickname || "")}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -76,10 +76,10 @@ export default function Header() {
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">
-                      {user.user_metadata?.nickname || "사용자"}
+                      {userProfile?.nickname || "사용자"}
                     </p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
+                      {userProfile?.email || user.email}
                     </p>
                   </div>
                 </DropdownMenuLabel>
@@ -100,7 +100,7 @@ export default function Header() {
                   disabled={isPending}
                 >
                   <FiLogOut className="mr-2 h-4 w-4" />
-                  <span>{isPending ? "로그아웃 중..." : "로그아웃"}</span>
+                  <span>{isPending ? "로그아웃 중" : "로그아웃"}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

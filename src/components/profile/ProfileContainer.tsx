@@ -10,6 +10,7 @@ import ProfileTabs from "@/components/profile/ProfileTabs";
 import ScrapedFeedsTab from "@/components/profile/ScrapedFeedsTab";
 import QuizRecordsTab from "@/components/profile/QuizRecordsTab";
 import ScrapedQuotesTab from "@/components/profile/ScrapedQuotesTab";
+import LearningStatisticsTab from "@/components/profile/LearningStatisticsTab";
 
 export default function ProfileContainer() {
   const { loading } = useAuthStore();
@@ -23,6 +24,8 @@ export default function ProfileContainer() {
         return <QuizRecordsTab />;
       case PROFILE_TAB.SCRAPED_QUOTES:
         return <ScrapedQuotesTab />;
+      case PROFILE_TAB.LEARNING_STATISTICS:
+        return <LearningStatisticsTab />;
       case PROFILE_TAB.SCRAPED_FEEDS:
       default:
         return <ScrapedFeedsTab />;

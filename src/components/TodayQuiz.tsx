@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -58,8 +58,8 @@ export default function TodayQuiz() {
     setSelectedAnswer(index);
   };
 
-  const handleSubmit = async () => {
-    if (selectedAnswer === null || !quiz || isSubmitting) return;
+  const handleSubmit = useCallback(async () => {
+    if (selectedAnswer === null) return;
 
     if (!user) {
       router.push(ROUTE_PATH.LOGIN);
@@ -67,6 +67,7 @@ export default function TodayQuiz() {
     }
 
     setIsSubmitting(true);
+
     try {
       const response = await fetch("/api/quizzes", {
         method: "POST",
@@ -84,11 +85,10 @@ export default function TodayQuiz() {
       }
 
       const result = await response.json();
+      if (!result) return;
 
-      if (result) {
-        setIsCorrect(result.isCorrect);
-        setShowResult(true);
-      }
+      setIsCorrect(result.isCorrect);
+      setShowResult(true);
     } catch (error) {
       console.error("답안 제출 실패:", error);
       alert(
@@ -99,7 +99,7 @@ export default function TodayQuiz() {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [selectedAnswer, user, router]);
 
   const renderSkeletonCard = useMemo(() => {
     return (

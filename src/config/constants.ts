@@ -27,6 +27,7 @@ export const PROFILE_TAB = {
   SCRAPED_FEEDS: "scraped_feeds",
   QUIZ_RECORDS: "quiz_records",
   SCRAPED_QUOTES: "scraped_quotes",
+  LEARNING_STATISTICS: "learning_statistics",
 } as const;
 
 export type ProfileTabType = (typeof PROFILE_TAB)[keyof typeof PROFILE_TAB];

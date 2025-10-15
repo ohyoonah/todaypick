@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GoBookmark, GoBookmarkFill } from "react-icons/go";
 import { Feed } from "@/types/feed";
 import { formatDate } from "@/utils/feedUtils";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
 
 interface FeedCardProps {
   feed: Feed;
@@ -17,7 +17,22 @@ interface FeedCardProps {
 export default function FeedCard({ feed, handleScrap }: FeedCardProps) {
   const [imageLoading, setImageLoading] = useState(true);
 
-  if (!feed) return null;
+  const handleFeedClick = useCallback(async () => {
+    try {
+      await fetch("/api/daily-activities", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          activity: "feed_clicked",
+          date: new Date().toISOString().split("T")[0],
+        }),
+      });
+    } catch (error) {
+      console.error("피드 클릭 기록 저장 실패:", error);
+    }
+  }, []);
 
   const handleScrapClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -26,7 +41,7 @@ export default function FeedCard({ feed, handleScrap }: FeedCardProps) {
   };
 
   return (
-    <Link href={feed.url || ""} target="_blank">
+    <Link href={feed.url || ""} target="_blank" onClick={handleFeedClick}>
       <Card className="h-full shadow-sm border hover:shadow-md transition-all duration-200 overflow-hidden relative group">
         <button
           className="absolute top-3 right-3 p-2 rounded-full bg-background/90 backdrop-blur-sm shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-200 z-20"

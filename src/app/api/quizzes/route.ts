@@ -11,21 +11,6 @@ export async function GET(request: NextRequest) {
 
     const { data: user } = await supabase.auth.getUser();
 
-    if (!!quizId) {
-      const { data, error } = await supabase
-        .from("quiz_results")
-        .select("*")
-        .eq("user_id", user.user?.id)
-        .eq("quiz_id", quizId)
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      return NextResponse.json(data || null, { status: 200 });
-    }
-
     if (!user.user) {
       return NextResponse.json(
         { error: "인증이 필요합니다." },
@@ -33,10 +18,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    if (!!quizId) {
+      const { data, error } = await supabase
+        .from("quiz_results")
+        .select("*")
+        .eq("user_id", user.user.id)
+        .eq("quiz_id", quizId)
+        .single();
+
+      // PGRST116: 데이터가 없을 때 발생하는 에러 - 퀴즈를 풀기 전에는 데이터가 없음
+      if (error && error.code !== "PGRST116") {
+        throw error;
+      }
+
+      return NextResponse.json(data || null, { status: 200 });
+    }
+
     const { data, error } = await supabase
       .from("quiz_results")
       .select("*")
-      .eq("user_id", user.user?.id)
+      .eq("user_id", user.user.id)
       .order("answered_at", { ascending: false });
 
     if (error) {
@@ -126,6 +127,23 @@ export async function POST(request: NextRequest) {
 
     if (resultError) {
       throw resultError;
+    }
+
+    // 퀴즈 완료 활동 기록
+    try {
+      await supabase.from("daily_activities").upsert(
+        {
+          user_id: user.user.id,
+          date: new Date().toISOString().split("T")[0],
+          quiz_completed: true,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "user_id,date",
+        }
+      );
+    } catch (activityError) {
+      console.error("활동 기록 저장 실패:", activityError);
     }
 
     return NextResponse.json(
