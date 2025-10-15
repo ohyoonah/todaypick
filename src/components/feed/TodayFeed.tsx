@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ROUTE_PATH } from "@/config/constants";
+import { ROUTE_PATH, FEED_CATEGORY } from "@/config/constants";
 import { useInfiniteFeed } from "@/hooks/useInfiniteFeed";
 import FeedCategoryTab from "@/components/feed/FeedCategoryTab";
 import FeedCard from "@/components/feed/FeedCard";
@@ -10,6 +10,7 @@ import SkeletonFeedCard from "@/components/feed/SkeletonFeedCard";
 export default function TodayFeed() {
   const { isLoading, feeds, activeTab, handleScrap, handleChangeTab } =
     useInfiniteFeed({
+      category: FEED_CATEGORY.IT_NEWS,
       limit: 3,
     });
 
