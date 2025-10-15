@@ -1,4 +1,4 @@
-import { FiBookmark, FiTarget } from "react-icons/fi";
+import { FiBookmark, FiTarget, FiBarChart } from "react-icons/fi";
 import { PROFILE_TAB, ProfileTabType } from "@/config/constants";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,11 @@ export default function ProfileTabs({
       id: PROFILE_TAB.SCRAPED_QUOTES,
       label: "스크랩한 명언",
       icon: FiBookmark,
+    },
+    {
+      id: PROFILE_TAB.LEARNING_STATISTICS,
+      label: "학습 통계",
+      icon: FiBarChart,
     },
   ];
 
