@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { FiEdit3, FiX } from "react-icons/fi";
 import { useAuthStore } from "@/stores/authStore";
 import { useProfileMutation } from "@/hooks/useProfileMutation";
+import { useProfileQuery } from "@/hooks/useProfileQuery";
 import { getInitials } from "@/utils/profileUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,14 +13,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function ProfileHeader() {
-  const { user, userProfile } = useAuthStore();
+  const { user } = useAuthStore();
+  const { data: userProfile } = useProfileQuery();
   const profileMutation = useProfileMutation();
 
   const nickname = userProfile?.nickname;
   const avatarUrl = userProfile?.avatar_url;
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editNickname, setEditNickname] = useState(nickname || "");
+  const [editNickname, setEditNickname] = useState<string>(nickname);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -27,7 +29,8 @@ export default function ProfileHeader() {
     if (!isEditing) {
       profileMutation.reset();
     }
-  }, [isEditing, profileMutation]);
+    setPreviewUrl(avatarUrl);
+  }, [isEditing, avatarUrl]);
 
   const handleSaveProfile = useCallback(async () => {
     if (!user) return;
@@ -84,8 +87,8 @@ export default function ProfileHeader() {
                 <label htmlFor="input-file" className="cursor-pointer">
                   <Avatar className="h-24 w-24 ring-4 ring-primary/20 hover:ring-primary/40 transition-all duration-200">
                     <AvatarImage
-                      key={previewUrl || avatarUrl || "default"}
-                      src={previewUrl || avatarUrl || undefined}
+                      key={previewUrl || "default"}
+                      src={previewUrl || undefined}
                     />
                     <AvatarFallback className="text-xl font-bold bg-primary text-primary-foreground">
                       {getInitials(editNickname || nickname || "사용자")}

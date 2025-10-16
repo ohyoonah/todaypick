@@ -1,11 +1,10 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
-import { useAuthStore } from "@/stores/authStore";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ProfileUpdateData } from "@/types/auth";
 
 export const useProfileMutation = () => {
-  const { setUserProfile } = useAuthStore();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (profileData: ProfileUpdateData & { file?: File }) => {
@@ -42,11 +41,8 @@ export const useProfileMutation = () => {
       return response.json();
     },
     onSuccess: async () => {
-      const response = await fetch("/api/profile");
-      if (response.ok) {
-        const updatedProfile = await response.json();
-        setUserProfile(updatedProfile);
-      }
+      // 성공하면 프로필 데이터 무효화
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
     onError: (error) => {
       console.error("프로필 업데이트 실패:", error);

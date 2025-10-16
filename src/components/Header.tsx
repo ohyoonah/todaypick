@@ -8,6 +8,7 @@ import { ROUTE_PATH } from "@/config/constants";
 import { useAuthStore } from "@/stores/authStore";
 import { formatAuthError } from "@/utils/authUtils";
 import { getInitials } from "@/utils/profileUtils";
+import { useProfileQuery } from "@/hooks/useProfileQuery";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -20,7 +21,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function Header() {
-  const { user, userProfile, setUser } = useAuthStore();
+  const { user, setUser } = useAuthStore();
+  const { data: userProfile } = useProfileQuery();
   const [state, formAction, isPending] = useActionState(logout, { error: "" });
 
   useEffect(() => {
