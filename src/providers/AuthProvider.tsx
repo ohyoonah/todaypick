@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/utils/supabase/client";
 import { useAuthStore } from "@/stores/authStore";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { initialize, setUser, setLoading, clearAuth } = useAuthStore();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -32,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         case "SIGNED_OUT":
           clearAuth();
+          queryClient.clear();
           break;
 
         case "SIGNED_IN":
@@ -52,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [initialize, setUser, setLoading, clearAuth]);
+  }, [initialize, setUser, setLoading, clearAuth, queryClient]);
 
   return <>{children}</>;
 }
